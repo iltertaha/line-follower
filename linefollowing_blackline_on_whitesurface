@@ -1,0 +1,283 @@
+#include <elapsedMillis.h>
+int timeElapsed;
+long count1,count2,error1;
+int Kp_1=6;
+int sensor1, sensor2, sensor3, sensor4, a, sensor5, sensor6,error,Kp,P,Ki,pwmR,pwmL,pwmB,correct,Kd,D,pre_error,last_error;
+int sensor1a;
+int sensor2a;
+int sensor3a;
+int sensor4a;
+int sensor5a;
+int sensor6a;
+unsigned long timex;
+ void setup() {
+Serial.begin(9600);
+pinMode(2, INPUT); //Right Motor Encoder 
+pinMode(3, INPUT); //Left Motor Encoder
+pinMode(11, OUTPUT); //Pin C2 Driving Motor Output 2 Right
+pinMode(6, OUTPUT); //Pin C1 Driving Motor Output 1 Left
+pinMode(8, OUTPUT); //Pin C5 Driving Motor Output 2 Right  
+pinMode(7, OUTPUT); //Pin C4 Driving Motor Output 2 Right
+pinMode(10, OUTPUT); //Pin A4 Driving Motor Output 1 Left
+pinMode(12, OUTPUT); //Pin A5 Driving Motor Output 1 Left
+pinMode(14, INPUT); //QTR Sensor Number 2 (-3)
+pinMode(15, INPUT); //QTR Sensor Number 3 (-2)
+pinMode(16, INPUT); //QTR Sensor Number 4 (-1)
+pinMode(17, INPUT); //QTR Sensor Number 5 (+1)
+pinMode(18, INPUT); //QTR Sensor Number 6 (+2)
+pinMode(19, INPUT); //QTR Sensor Number 7 (+3)
+//attachInterrupt(digitalPinToInterrupt(2),counting1, RISING);
+//attachInterrupt(digitalPinToInterrupt(3),counting2, RISING);
+delay(2500);
+}
+
+void sag_geri(int pwmR){
+    
+  digitalWrite(8, LOW); //SAG
+  digitalWrite(7, HIGH); //SAG
+    analogWrite(6, pwmR);
+}
+void sol_geri(int pwmL){
+digitalWrite(10, HIGH); //SOL  
+digitalWrite(12, LOW); //SOL
+  analogWrite(11, pwmL);
+}
+
+void sag_ileri(int pwmR){  
+  digitalWrite(8, HIGH);
+  digitalWrite(7, LOW);
+  analogWrite(6, pwmR);
+
+}
+void sol_ileri(int pwmL){
+  digitalWrite(12, HIGH);
+    digitalWrite(10, LOW);
+      analogWrite(11, pwmL);
+}
+
+void loop() {
+
+  
+sensor1=analogRead(14);
+sensor2=analogRead(15);  
+sensor3=analogRead(16);
+sensor4=analogRead(17);  
+sensor5=analogRead(18);
+sensor6=analogRead(19);
+
+
+
+
+if(sensor1<=512)
+{
+  sensor1=1;
+}
+else
+{
+  sensor1=0;
+}
+
+if(sensor2<=512)
+{
+  sensor2=1;
+}
+else
+{
+  sensor2=0;
+}
+if(sensor3<=512)
+{
+  sensor3=1;
+}
+else
+{
+  sensor3=0;
+}
+if(sensor4<=512)
+{
+  sensor4=1;
+}
+else
+{
+  sensor4=0;
+}
+if(sensor5<=512)
+{
+  sensor5=1;
+}
+else
+{
+  sensor5=0;
+}
+if(sensor6<=512)
+{
+  sensor6=1;
+}
+else
+{
+  sensor6=0;
+}
+/*
+Serial.print(sensor1  );
+Serial.print(sensor2  );
+Serial.print(sensor3  );
+Serial.print(sensor4 );
+Serial.print(sensor5  );
+Serial.println(sensor6  );*/
+
+sensor1a=(-9)*sensor1;
+sensor2a=(-6)*sensor2;  
+sensor3a=(-1)*sensor3;
+sensor4a=(+1)*sensor4;  
+sensor5a=(+6)*sensor5;
+sensor6a=(+9)*sensor6;
+
+error=sensor1a+sensor2a+sensor3a+sensor4a+sensor5a+sensor6a; //Error of robot from line
+Kp=8; //Proportional Constant (found by trial and error)
+Kd=15;
+P=error*Kp; // asıl hız
+D=(error-pre_error)*Kd;
+correct=P+D;
+
+/*timex=millis();
+Serial.println(timex);*/
+
+
+
+pwmL=50-correct;
+pwmR=50+correct;
+
+
+if (pwmL > 255)
+{
+  pwmL=255;
+}
+else if (pwmL<0)
+{
+  pwmL=0;
+}
+else
+{
+  pwmL=pwmL;
+}
+if (pwmR > 255)
+{
+  pwmR=255;
+}
+else if (pwmR<0)
+{
+  pwmR=0;
+}
+else
+{
+  pwmR=pwmR;
+}
+/*starttime = millis();
+endtime = starttime;
+While ((endtime - starttime) <=1000) // do this loop for up to 1000mS
+{
+  sag_ileri(50);
+loopcount = loopcount+1;
+endtime = millis();
+}
+serial.print (loopcount,DEC);*/
+
+  
+  /*while (sensor1==1 && sensor2==1 && sensor3==1 && sensor4==1 && sensor5==1 && sensor6==1){
+
+  sag_ileri(0);
+  sol_ileri(0);
+
+ 
+
+    
+  }*/
+
+
+
+  if ((sensor1==0 && sensor2==0 && sensor3==0 && sensor4==0 && sensor5==0 && sensor6==0) && (timeElapsed>=1200)){
+
+sag_ileri(120);
+sol_ileri(120);
+
+  }
+else if((sensor1==0 && sensor2==0 && sensor3==0 && sensor4==0 && sensor5==0 && sensor6==0)&&(timeElapsed<1200))
+  {
+  pwmL=52;
+  pwmR=52;
+  sol_geri(pwmL);
+  sag_geri(pwmR);
+
+  }
+
+
+  /*else if (sensor1==1 && sensor2==1 && sensor3==1 && sensor4==1 && sensor5==1 && sensor6==1){
+
+  sag_ileri(0);
+  sol_ileri(0);
+  }
+*/
+  /*else if (sensor1==1 && sensor2==1 && sensor3==1 && sensor4==1 && sensor5==1 && sensor6==1){
+  sag_ileri(0);
+  sol_ileri(0);
+  delay(5000);
+  sag_ileri(80);
+  sol_ileri(80);
+  delay(1500);}*/
+
+
+ else if/*error>=11 && */((sensor1==0 && sensor2==1 && sensor3==1 && sensor4==1 && sensor5==1 && sensor6==1)||(sensor1==0 && sensor2==0 && sensor3==1 && sensor4==1 && sensor5==1 && sensor6==1)){
+  sag_geri(55);
+  sol_ileri(140);
+  delay(110);
+  
+ sag_ileri(80);
+  sol_ileri(80);
+  delay(50);
+  
+  sag_ileri(pwmR);
+  sol_ileri(pwmL);
+
+ 
+
+ 
+  
+}
+else if/*error<=-11*/((sensor1==1 && sensor2==1 && sensor3==1 && sensor4==1 && sensor5==1 && sensor6==0)||(sensor1==1 && sensor2==1 && sensor3==1 && sensor4==1 && sensor5==0 && sensor6==0)){
+  sag_ileri(140);
+  sol_geri(55);
+  delay(110);
+ 
+  sag_ileri(80);
+  sol_ileri(80);
+  delay(50);
+  
+  sag_ileri(pwmR);
+  sol_ileri(pwmL);
+}
+else if ((sensor1==0 && sensor2==0 && sensor3==0 && sensor4==1 && sensor5==0 && sensor6==0)|| (sensor1==0 && sensor2==0 && sensor3==1 && sensor4==0 && sensor5==0 && sensor6==0)){
+
+sag_ileri(85);
+sol_geri(70);
+delay(500);
+
+  sag_ileri(pwmR);
+  sol_ileri(pwmL);
+
+  
+}
+
+  
+
+
+else
+{
+  sag_ileri(pwmR);
+  sol_ileri(pwmL);
+
+}
+
+ pre_error=error; 
+}
+
+
